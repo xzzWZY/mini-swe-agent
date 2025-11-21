@@ -153,6 +153,8 @@ environment:
     PIP_PROGRESS_BAR: 'off'
     TQDM_DISABLE: '1'
 model:
+  # To use Gemini, you need to set the GEMINI_API_KEY environment variable
+  model_name: "gemini-3-pro"
   model_kwargs:
     temperature: 0.0
     drop_params: true

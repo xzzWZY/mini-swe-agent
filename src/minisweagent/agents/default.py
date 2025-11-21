@@ -101,7 +101,7 @@ class DefaultAgent:
         """Execute the action and return the observation."""
         output = self.execute_action(self.parse_action(response))
         observation = self.render_template(self.config.action_observation_template, output=output)
-        self.add_message("user", observation)
+        self.add_message("user", observation, extra=output)
         return output
 
     def parse_action(self, response: dict) -> dict:

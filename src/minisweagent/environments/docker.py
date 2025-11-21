@@ -2,6 +2,7 @@ import logging
 import os
 import shlex
 import subprocess
+import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from typing import Any
@@ -86,6 +87,7 @@ class DockerEnvironment:
             cmd.extend(["-e", f"{key}={value}"])
         cmd.extend([self.container_id, "bash", "-lc", command])
 
+        start_time = time.perf_counter()
         result = subprocess.run(
             cmd,
             text=True,
@@ -95,7 +97,8 @@ class DockerEnvironment:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
-        return {"output": result.stdout, "returncode": result.returncode}
+        end_time = time.perf_counter()
+        return {"output": result.stdout, "returncode": result.returncode, "duration": end_time - start_time}
 
     def cleanup(self):
         """Stop and remove the Docker container."""

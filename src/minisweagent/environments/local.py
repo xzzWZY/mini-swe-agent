@@ -1,6 +1,7 @@
 import os
 import platform
 import subprocess
+import time
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -20,6 +21,7 @@ class LocalEnvironment:
     def execute(self, command: str, cwd: str = "", *, timeout: int | None = None):
         """Execute a command in the local environment and return the result as a dict."""
         cwd = cwd or self.config.cwd or os.getcwd()
+        start_time = time.perf_counter()
         result = subprocess.run(
             command,
             shell=True,
@@ -32,7 +34,8 @@ class LocalEnvironment:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
-        return {"output": result.stdout, "returncode": result.returncode}
+        end_time = time.perf_counter()
+        return {"output": result.stdout, "returncode": result.returncode, "duration": end_time - start_time}
 
     def get_template_vars(self) -> dict[str, Any]:
         return asdict(self.config) | platform.uname()._asdict() | os.environ

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -57,9 +58,12 @@ class LitellmModel:
     )
     def _query(self, messages: list[dict[str, str]], **kwargs):
         try:
-            return litellm.completion(
+            start_time = time.perf_counter()
+            response = litellm.completion(
                 model=self.config.model_name, messages=messages, **(self.config.model_kwargs | kwargs)
             )
+            end_time = time.perf_counter()
+            return response, end_time - start_time
         except litellm.exceptions.AuthenticationError as e:
             e.message += " You can permanently set your API key with `mini-extra config set KEY VALUE`."
             raise e
@@ -67,7 +71,7 @@ class LitellmModel:
     def query(self, messages: list[dict[str, str]], **kwargs) -> dict:
         if self.config.set_cache_control:
             messages = set_cache_control(messages, mode=self.config.set_cache_control)
-        response = self._query(messages, **kwargs)
+        response, duration = self._query(messages, **kwargs)
         try:
             cost = litellm.cost_calculator.completion_cost(response)
             if cost <= 0.0:
@@ -92,6 +96,7 @@ class LitellmModel:
             "content": response.choices[0].message.content or "",  # type: ignore
             "extra": {
                 "response": response.model_dump(),
+                "duration": duration,
             },
         }
 
